@@ -60,12 +60,23 @@ func main() {
 	if err := json.Unmarshal(responseData, &articles); err != nil {
 		log.Fatal(err)
 	}
+	// fmt.Println(articles)
 
-	for _, article := range articles {
-		if err := insertArticle(db, article); err != nil {
-			log.Println(err)
+	for i := 0; i < len(articles); i++ {
+		fmt.Println(len(articles[i].Medias))
+		for j := 0; j < len(articles[i].Medias); j++ {
+
+			fmt.Println(articles[i].Medias[j].ContentURL)
 		}
+
+		fmt.Println(articles[i].Title)
 	}
+
+	// for _, article := range articles {
+	// 	if err := insertArticle(db, article); err != nil {
+	// 		log.Println(err)
+	// 	}
+	// }
 }
 
 func createArticleTable(db *sql.DB) error {
