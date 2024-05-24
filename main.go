@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -41,14 +40,15 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Add Table to Database if does not exist
 	if err := createArticleTable(db); err != nil {
 		log.Fatal(err)
-		fmt.Println("Cannot create Table")
 	}
 	if err := createMediaTable(db); err != nil {
 		log.Fatal(err)
 	}
 
+	// Connect to API
 	response, err := http.Get("https://gist.githubusercontent.com/gotokatsuya/cc78c04d3af15ebe43afe5ad970bc334/raw/dc39bacb834105c81497ba08940be5432ed69848/articles.json")
 	if err != nil {
 		log.Fatal(err)
@@ -60,11 +60,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Unmarshal JSON
 	var articles []Article
 	if err := json.Unmarshal(responseData, &articles); err != nil {
 		log.Fatal(err)
 	}
-
+	// Add data to Articles and Medias table
 	for i := 0; i < len(articles); i++ {
 		if err := insertArticle(db, articles[i]); err != nil {
 			log.Println(err)
@@ -79,7 +80,6 @@ func main() {
 }
 
 // FUNCTIONS:
-
 // Create Tables
 func createArticleTable(db *sql.DB) error {
 	query := `CREATE TABLE IF NOT EXISTS articles (
@@ -120,7 +120,6 @@ func insertArticle(db *sql.DB, article Article) error {
 		return err
 	}
 
-	fmt.Println("Article inserted successfully")
 	return nil
 }
 
@@ -136,7 +135,5 @@ func insertMedia(db *sql.DB, media Media, articleID int) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("Media inserted successfully")
 	return nil
 }
