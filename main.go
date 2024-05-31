@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -83,7 +85,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Print database
-	printArticlesAsJSON(articles)
-
+	// Create new router
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		printArticlesAsJSON(w, articles)
+	})
+	// Start server
+	log.Fatal(http.ListenAndServe(":8080", r))
 }

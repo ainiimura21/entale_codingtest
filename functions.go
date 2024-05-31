@@ -3,8 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
-	"log"
+	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -69,7 +68,7 @@ func insertMedia(db *sql.DB, media Media, articleID int) error {
 }
 
 func fetchArticles(db *sql.DB) ([]Article, error) {
-	// Query articles and media
+	// Query articles and media from database
 	rows, err := db.Query("SELECT articles.id, articles.title, articles.body, articles.date, medias.id, medias.content_url, medias.content_type FROM articles LEFT JOIN medias ON articles.id = medias.article_id")
 	if err != nil {
 		return nil, err
@@ -111,10 +110,16 @@ func fetchArticles(db *sql.DB) ([]Article, error) {
 	return result, nil
 }
 
-func printArticlesAsJSON(articles []Article) {
+func printArticlesAsJSON(w http.ResponseWriter, articles []Article) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Marshal articles to JSON
 	articlesJSON, err := json.Marshal(articles)
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	fmt.Println(string(articlesJSON))
+
+	// Write JSON response
+	w.Write(articlesJSON)
 }
