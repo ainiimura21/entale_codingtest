@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -77,6 +78,15 @@ func main() {
 
 		}
 	}
+	// Get Articles and Media from database
+	articles, err = fetchArticles(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Print database
+	printArticlesAsJSON(articles)
+
 }
 
 // FUNCTIONS:
@@ -136,4 +146,55 @@ func insertMedia(db *sql.DB, media Media, articleID int) error {
 		return err
 	}
 	return nil
+}
+
+func fetchArticles(db *sql.DB) ([]Article, error) {
+	// Query articles and media
+	rows, err := db.Query("SELECT articles.id, articles.title, articles.body, articles.date, medias.id, medias.content_url, medias.content_type FROM articles LEFT JOIN medias ON articles.id = medias.article_id")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Map to store articles by ID
+	articlesMap := make(map[int]Article)
+
+	for rows.Next() {
+		var articleID int
+		var article Article
+		var media Media
+		err := rows.Scan(&articleID, &article.Title, &article.Body, &article.Date, &media.ID, &media.ContentURL, &media.ContentType)
+		if err != nil {
+			return nil, err
+		}
+
+		if _, ok := articlesMap[articleID]; !ok {
+			article.ID = articleID
+			article.Medias = append(article.Medias, media)
+			articlesMap[articleID] = article
+		} else {
+			updatedArticle := articlesMap[articleID]
+			updatedArticle.Medias = append(updatedArticle.Medias, media)
+			articlesMap[articleID] = updatedArticle
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	var result []Article
+	for _, article := range articlesMap {
+		result = append(result, article)
+	}
+
+	return result, nil
+}
+
+func printArticlesAsJSON(articles []Article) {
+	articlesJSON, err := json.Marshal(articles)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(articlesJSON))
 }
