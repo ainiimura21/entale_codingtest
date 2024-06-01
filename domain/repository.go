@@ -1,16 +1,11 @@
-package main
+package domain
 
 import (
 	"database/sql"
-	"encoding/json"
-	"net/http"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
-// FUNCTIONS:
 // Create Tables
-func createArticleTable(db *sql.DB) error {
+func CreateArticleTable(db *sql.DB) error {
 	query := `CREATE TABLE IF NOT EXISTS articles (
 		id INT PRIMARY KEY,
 		title VARCHAR(100),
@@ -22,7 +17,7 @@ func createArticleTable(db *sql.DB) error {
 	return err
 }
 
-func createMediaTable(db *sql.DB) error {
+func CreateMediaTable(db *sql.DB) error {
 	query := `CREATE TABLE IF NOT EXISTS medias (
 		id INT PRIMARY KEY,
 		content_url VARCHAR(100),
@@ -36,7 +31,7 @@ func createMediaTable(db *sql.DB) error {
 
 // Insert Data Into Table
 
-func insertArticle(db *sql.DB, article Article) error {
+func InsertArticle(db *sql.DB, article Article) error {
 	query := `INSERT INTO articles (id, title, body, date) VALUES (?, ?, ?, ?)`
 	insert, err := db.Prepare(query)
 	if err != nil {
@@ -52,7 +47,7 @@ func insertArticle(db *sql.DB, article Article) error {
 	return nil
 }
 
-func insertMedia(db *sql.DB, media Media, articleID int) error {
+func InsertMedia(db *sql.DB, media Media, articleID int) error {
 	query := `INSERT INTO medias (id, content_url, content_type, article_id) VALUES (?, ?, ?, ?)`
 	insert, err := db.Prepare(query)
 	if err != nil {
@@ -67,7 +62,7 @@ func insertMedia(db *sql.DB, media Media, articleID int) error {
 	return nil
 }
 
-func fetchArticles(db *sql.DB) ([]Article, error) {
+func GetArticles(db *sql.DB) ([]Article, error) {
 	// Query articles and media from database
 	rows, err := db.Query("SELECT articles.id, articles.title, articles.body, articles.date, medias.id, medias.content_url, medias.content_type FROM articles LEFT JOIN medias ON articles.id = medias.article_id")
 	if err != nil {
@@ -108,18 +103,4 @@ func fetchArticles(db *sql.DB) ([]Article, error) {
 	}
 
 	return result, nil
-}
-
-func printArticlesAsJSON(w http.ResponseWriter, articles []Article) {
-	w.Header().Set("Content-Type", "application/json")
-
-	// Marshal articles to JSON
-	articlesJSON, err := json.Marshal(articles)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Write JSON response
-	w.Write(articlesJSON)
 }

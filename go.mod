@@ -1,4 +1,4 @@
-module hello
+module entale_codingtest
 
 go 1.22.2
 
